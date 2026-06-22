@@ -36,10 +36,47 @@ S{session}.{run} (HH:MM DD/MM/YYYY):
 
 **`screen_cap/`** — screenshots, named by the exact code `S{session}.{run}`. If multiple shots are taken in one iteration (due to navigation), append an index: `S2.3.1.png`, `S2.3.2.png`… The final shot used for error evaluation carries the bare name `S2.3.png` (no suffix index).
 
-## Step 0 — Preflight (always run first)
+## Step 0 — Load companion skills (always run first)
+
+Run the discovery script to find companion skills on this machine:
+```
+bash "${CLAUDE_SKILL_DIR}/scripts/load_companion_skills.sh"
+```
+`CLAUDE_SKILL_DIR` is the directory containing this SKILL.md file. Resolve it dynamically — it is wherever the user installed the skill (varies per machine, OS, and username).
+
+For each line in the output:
+
+- **`SKILL_FOUND:<name>:<path>`** → read that SKILL.md file using the Read tool and extract the core rules/patterns from it (not the full text verbatim — distill the key principles that apply to Flutter work).
+- **`SKILL_MISSING:<name>`** → print the following and continue (do not stop the session):
+  ```
+  ⚠ Companion skill '<name>' not found — install it to get [brief benefit]. Continuing without it.
+  ```
+  Benefit hint per skill:
+  - `mobile`: native mobile UX patterns, platform conventions, accessibility
+  - `ui-animation`: motion design rules, spring physics, transition timing
+  - `design-taste-frontend`: visual quality bar — spacing, hierarchy, color consistency
+
+After processing all companion skills, print a summary visible to the user:
+```
+Active companion skills: [comma-separated list of found ones]
+Design & mobile rules in effect this session:
+  • [rule 1 synthesized from loaded skills]
+  • [rule 2]
+  • [rule 3]
+  • [up to 5 bullet points]
+```
+
+These rules stay active for the **entire session** and are applied when:
+- Writing any Flutter widget code → apply mobile patterns
+- Making any UI/layout/color decision → apply design-taste-frontend rules
+- Adding any animation or transition → apply ui-animation patterns
+- Inspecting screenshots → flag design regressions (bad spacing, misaligned elements, inconsistent colors) as bugs, not just functional errors
+
+## Step 0b — Preflight (always run second)
 ```
 bash "${CLAUDE_SKILL_DIR}/scripts/preflight.sh"
 ```
+
 - If exit code is non-zero because a tool requires manual installation → stop, print the exact message the script outputs, **do not try to install it automatically**.
 - If exit code is non-zero because multiple devices are connected → ask the user to pick one, then pass `-d <device_id>` to every subsequent script call.
 - Extract `DEVICE_ID` from the script output.
@@ -101,6 +138,7 @@ The last image in the Step 5.1 navigation sequence (code `S<session>.<RUN>.<last
 Inspect the official screenshot for this iteration (the last image from Step 5.2):
 - Is there a visible UI error (layout broken, overflow, does not match requirements, widget missing)?
 - Cross-reference with `LOG` (the flutter run log file) for any new exceptions or stack traces (read only the newest log section, not from the beginning).
+- **Also evaluate design quality against the active companion skill ruleset** (loaded in Step 0): check spacing, alignment, color consistency, and animation smoothness. Treat design regressions as bugs with the same priority as functional bugs — a misaligned element or inconsistent color is just as worth fixing as a crash.
 
 **NO ERROR** → exit the loop, proceed to Step 6 (log success).
 

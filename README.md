@@ -51,7 +51,7 @@ This file is the agent's long-term memory for your project. Any future session �
 
 **Step 1** — Clone this repo:
 ```
-git clone https://github.com/<username>/flutter-loop-vn
+git clone https://github.com/hoanganhdo2316-png/flutter-loop-vn
 ```
 
 **Step 2** — Enter the directory:

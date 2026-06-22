@@ -2,3 +2,4 @@ sandbox_adb_ip.txt
 *.log
 .flutter_loop/
 screen_cap/*_uidump.xml
+!screen_cap/*.png
